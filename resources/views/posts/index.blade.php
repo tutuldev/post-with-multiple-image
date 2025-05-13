@@ -31,6 +31,7 @@
         @endif
 
         <br>
+        <a href="{{ route('posts.show', $post->id) }}">Show</a> |
         <a href="{{ route('posts.edit', $post->id) }}">Edit</a> |
         <form action="{{ route('posts.destroy', $post->id) }}" method="POST" style="display: inline;">
             @csrf
