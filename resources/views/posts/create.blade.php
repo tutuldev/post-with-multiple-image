@@ -22,21 +22,16 @@
 </form>
 
 <script>
-    document.getElementById('addCodeBtn').addEventListener('click', () => {
-        const div = document.createElement('div');
-        div.className = 'code-group';
-        div.innerHTML = `
-            <input type="text" name="code_titles[]" placeholder="Code Title">
-            <textarea name="codes[]" placeholder="Code Block"></textarea>
-            <button type="button" class="remove-code-btn">Remove</button>
-        `;
-        document.getElementById('codeContainer').appendChild(div);
-    });
+    const codeContainer = document.getElementById('codeContainer');
+    const addCodeBtn = document.getElementById('addCodeBtn');
 
-    document.getElementById('codeContainer').addEventListener('click', function (e) {
-        if (e.target && e.target.classList.contains('remove-code-btn')) {
-            e.target.parentElement.remove();
-        }
+    addCodeBtn.addEventListener('click', () => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <input type="text" name="code_titles[]" placeholder="Code Title"><br>
+            <textarea name="codes[]" placeholder="Another Code Block"></textarea>
+        `;
+        codeContainer.appendChild(div);
     });
 
     const imageInput = document.getElementById('imageInput');
@@ -52,7 +47,10 @@
 
     function renderPreviews() {
         previewContainer.innerHTML = '';
+        const dataTransfer = new DataTransfer();
+
         selectedFiles.forEach((file, index) => {
+            dataTransfer.items.add(file);
             const reader = new FileReader();
             reader.onload = function (e) {
                 const div = document.createElement('div');
@@ -77,6 +75,8 @@
             };
             reader.readAsDataURL(file);
         });
+
+        imageInput.files = dataTransfer.files;
     }
 
     form.addEventListener('submit', function () {
@@ -85,3 +85,5 @@
         imageInput.files = dataTransfer.files;
     });
 </script>
+
+
