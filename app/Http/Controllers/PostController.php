@@ -24,26 +24,31 @@ public function store(Request $request)
     $request->validate([
         'title' => 'required|string|max:255',
         'description' => 'nullable|string',
-        'codes.*' => 'nullable|string',
+        'code_titles' => 'nullable|array',
+        'codes' => 'nullable|array',
         'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
     ]);
 
-    $imagePaths = [];
+    $data = $request->only(['title', 'description']);
+
+    $data['code_titles'] = $request->code_titles ?? [];
+    $data['codes'] = $request->codes ?? [];
+
+    // Image Upload
+    $uploadedImages = [];
     if ($request->hasFile('images')) {
         foreach ($request->file('images') as $image) {
-            $imagePaths[] = $image->store('uploads', 'public');
+            $path = $image->store('uploads', 'public');
+            $uploadedImages[] = $path;
         }
     }
+    $data['images'] = $uploadedImages;
 
-    Post::create([
-        'title' => $request->title,
-        'description' => $request->description,
-        'codes' => $request->codes,
-        'images' => $imagePaths,
-    ]);
+    Post::create($data);
 
-    return redirect()->route('posts.index')->with('success', 'Post created');
+    return redirect()->route('posts.index')->with('success', 'Post created successfully.');
 }
+
 
 
     public function show(Post $post)
@@ -61,35 +66,42 @@ public function update(Request $request, Post $post)
     $request->validate([
         'title' => 'required|string|max:255',
         'description' => 'nullable|string',
-        'codes.*' => 'nullable|string',
+        'code_titles' => 'nullable|array',
+        'codes' => 'nullable|array',
         'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'remove_images' => 'nullable|array',
     ]);
 
-    $imagePaths = $post->images ?? [];
+    $data = $request->only(['title', 'description']);
 
-    foreach ($request->input('remove_images', []) as $removePath) {
-        if (\Storage::disk('public')->exists($removePath)) {
-            \Storage::disk('public')->delete($removePath);
+    $data['code_titles'] = $request->code_titles ?? [];
+    $data['codes'] = $request->codes ?? [];
+
+    // Remove old images
+    $existingImages = $post->images ?? [];
+    if ($request->has('remove_images')) {
+        foreach ($request->remove_images as $removePath) {
+            if (Storage::disk('public')->exists($removePath)) {
+                Storage::disk('public')->delete($removePath);
+            }
+            $existingImages = array_filter($existingImages, fn($img) => $img !== $removePath);
         }
-        $imagePaths = array_filter($imagePaths, fn($img) => $img !== $removePath);
     }
 
+    // Upload new images
     if ($request->hasFile('images')) {
         foreach ($request->file('images') as $image) {
-            $imagePaths[] = $image->store('uploads', 'public');
+            $path = $image->store('uploads', 'public');
+            $existingImages[] = $path;
         }
     }
 
-    $post->update([
-        'title' => $request->title,
-        'description' => $request->description,
-        'codes' => $request->codes,
-        'images' => array_values($imagePaths),
-    ]);
+    $data['images'] = array_values($existingImages); // reindex
 
-    return redirect()->route('posts.index')->with('success', 'Post updated');
+    $post->update($data);
+
+    return redirect()->route('posts.index')->with('success', 'Post updated successfully.');
 }
-
 
 
 

@@ -8,7 +8,8 @@
 
     <div id="codeContainer">
         <div class="code-group">
-            <textarea name="codes[]" placeholder="Code Block 1"></textarea>
+            <input type="text" name="code_titles[]" placeholder="Code Title">
+            <textarea name="codes[]" placeholder="Code Block"></textarea>
             <button type="button" class="remove-code-btn">Remove</button>
         </div>
     </div>
@@ -21,25 +22,23 @@
 </form>
 
 <script>
-    // Add More Code Block
     document.getElementById('addCodeBtn').addEventListener('click', () => {
         const div = document.createElement('div');
         div.className = 'code-group';
         div.innerHTML = `
-            <textarea name="codes[]" placeholder="Another Code Block"></textarea>
+            <input type="text" name="code_titles[]" placeholder="Code Title">
+            <textarea name="codes[]" placeholder="Code Block"></textarea>
             <button type="button" class="remove-code-btn">Remove</button>
         `;
         document.getElementById('codeContainer').appendChild(div);
     });
 
-    // Remove Code Block
     document.getElementById('codeContainer').addEventListener('click', function (e) {
         if (e.target && e.target.classList.contains('remove-code-btn')) {
             e.target.parentElement.remove();
         }
     });
 
-    // Image Preview
     const imageInput = document.getElementById('imageInput');
     const previewContainer = document.getElementById('imagePreview');
     const form = document.getElementById('createPostForm');

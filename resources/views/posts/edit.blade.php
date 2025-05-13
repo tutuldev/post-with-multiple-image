@@ -8,9 +8,10 @@
     <textarea name="description">{{ $post->description }}</textarea><br><br>
 
     <div id="codeContainer">
-        @foreach ($post->codes ?? [] as $code)
+        @foreach ($post->code_titles ?? [] as $index => $title)
             <div class="code-group">
-                <textarea name="codes[]">{{ $code }}</textarea>
+                <input type="text" name="code_titles[]" value="{{ $title }}" placeholder="Code Title">
+                <textarea name="codes[]">{{ $post->codes[$index] ?? '' }}</textarea>
                 <button type="button" class="remove-code-btn">Remove</button>
             </div>
         @endforeach
@@ -25,25 +26,23 @@
 </form>
 
 <script>
-    // Add More Code Field
     document.getElementById('addCodeBtn').addEventListener('click', () => {
         const div = document.createElement('div');
         div.className = 'code-group';
         div.innerHTML = `
-            <textarea name="codes[]" placeholder="Another Code Block"></textarea>
+            <input type="text" name="code_titles[]" placeholder="Code Title">
+            <textarea name="codes[]" placeholder="Code Block"></textarea>
             <button type="button" class="remove-code-btn">Remove</button>
         `;
         document.getElementById('codeContainer').appendChild(div);
     });
 
-    // Remove Code Field
     document.getElementById('codeContainer').addEventListener('click', function (e) {
         if (e.target && e.target.classList.contains('remove-code-btn')) {
             e.target.parentElement.remove();
         }
     });
 
-    // Image preview & removal
     const oldImages = @json($post->images ?? []);
     const previewContainer = document.getElementById('imagePreview');
     const removedImagesContainer = document.getElementById('removedImagesContainer');
