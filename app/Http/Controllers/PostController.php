@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Storage;
 
 class PostController extends Controller
 {
@@ -55,37 +56,66 @@ class PostController extends Controller
         return view('posts.edit', compact('post'));
     }
 
-    public function update(Request $request, Post $post)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'code' => 'nullable|string',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
+public function update(Request $request, Post $post)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'code' => 'nullable|string',
+        'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+    ]);
 
-        $imagePaths = $post->images ?? [];
+    // Get current images from DB
+    $imagePaths = $post->images ?? [];
 
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('uploads', 'public');
-                $imagePaths[] = $path;
+    // Handle removed images
+    $removeImages = $request->input('remove_images', []);
+    if (!empty($removeImages)) {
+        foreach ($removeImages as $removePath) {
+            // Delete file from storage
+            if (\Storage::disk('public')->exists($removePath)) {
+                \Storage::disk('public')->delete($removePath);
+            }
+            // Remove path from array
+            $imagePaths = array_filter($imagePaths, fn($img) => $img !== $removePath);
+        }
+    }
+
+    // Handle newly uploaded images
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('uploads', 'public');
+            $imagePaths[] = $path;
+        }
+    }
+
+    // Update post
+    $post->update([
+        'title' => $request->title,
+        'description' => $request->description,
+        'code' => $request->code,
+        'images' => array_values($imagePaths), // clean index
+    ]);
+
+    return redirect()->route('posts.index')->with('success', 'Post updated successfully');
+}
+
+
+
+ public function destroy(Post $post)
+{
+    // সব ইমেজ ডিলিট করো
+    if ($post->images && is_array($post->images)) {
+        foreach ($post->images as $image) {
+            if (\Storage::disk('public')->exists($image)) {
+                \Storage::disk('public')->delete($image);
             }
         }
-
-        $post->update([
-            'title' => $request->title,
-            'description' => $request->description,
-            'code' => $request->code,
-            'images' => $imagePaths,
-        ]);
-
-        return redirect()->route('posts.index')->with('success', 'Post updated successfully');
     }
 
-    public function destroy(Post $post)
-    {
-        $post->delete();
-        return redirect()->route('posts.index')->with('success', 'Post deleted successfully');
-    }
+    $post->delete();
+
+    return redirect()->route('posts.index')->with('success', 'Post deleted successfully');
+}
+
 }
