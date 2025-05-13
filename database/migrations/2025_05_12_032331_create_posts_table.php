@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-      Schema::create('posts', function (Blueprint $table) {
-        $table->id();
-        $table->string('title');
-        $table->text('description')->nullable();
-        $table->text('code')->nullable();
-        $table->json('images')->nullable(); 
-        $table->timestamps();
-    });
+        Schema::create('posts', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->json('codes')->nullable(); 
+            $table->json('images')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**

@@ -1,27 +1,54 @@
 <h2>All Posts</h2>
 
-<a href="{{ route('posts.create') }}">Create New Post</a>
+<a href="{{ route('posts.create') }}">Create Post</a>
 
-@foreach ($posts as $post)
-    <div style="border:1px solid #ddd; padding:10px; margin:10px 0;">
-        <h3>{{ $post->title }}</h3>
-        <p>{{ Str::limit($post->description, 100) }}</p>
+<table border="1" cellpadding="10" cellspacing="0" style="width: 100%; margin-top: 20px;">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Codes</th>
+            <th>Images</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach ($posts as $post)
+            <tr>
+                <td>{{ $post->title }}</td>
+                <td>{{ $post->description }}</td>
 
-        {{-- Show images if available --}}
-        @if ($post->images && is_array($post->images))
-            <div style="display: flex; gap: 10px; margin: 10px 0;">
-                @foreach ($post->images as $img)
-                    <img src="{{ asset('storage/' . $img) }}" width="100" style="border-radius: 4px;">
-                @endforeach
-            </div>
-        @endif
+                <!-- Display Codes -->
+                <td>
+                    @if (!empty($post->codes))
+                        @foreach ($post->codes as $code)
+                            <pre>{{ $code }}</pre>
+                        @endforeach
+                    @else
+                        No codes available
+                    @endif
+                </td>
 
-        <a href="{{ route('posts.show', $post->id) }}">View</a>
-        <a href="{{ route('posts.edit', $post->id) }}">Edit</a>
-        <form action="{{ route('posts.destroy', $post->id) }}" method="POST" style="display:inline;">
-            @csrf
-            @method('DELETE')
-            <button type="submit">Delete</button>
-        </form>
-    </div>
-@endforeach
+                <!-- Display Images -->
+                <td>
+                    @if (!empty($post->images))
+                        @foreach ($post->images as $image)
+                            <img src="{{ asset('storage/' . $image) }}" width="100" alt="Image" style="margin: 5px;">
+                        @endforeach
+                    @else
+                        No images available
+                    @endif
+                </td>
+
+                <td>
+                    <a href="{{ route('posts.edit', $post->id) }}">Edit</a> |
+                    <form action="{{ route('posts.destroy', $post->id) }}" method="POST" style="display: inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>

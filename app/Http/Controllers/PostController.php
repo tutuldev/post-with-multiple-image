@@ -19,32 +19,32 @@ class PostController extends Controller
         return view('posts.create');
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'code' => 'nullable|string',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'codes.*' => 'nullable|string',
+        'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+    ]);
 
-        $imagePaths = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('uploads', 'public');
-                $imagePaths[] = $path;
-            }
+    $imagePaths = [];
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $image) {
+            $imagePaths[] = $image->store('uploads', 'public');
         }
-
-        Post::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'code' => $request->code,
-            'images' => $imagePaths,
-        ]);
-
-        return redirect()->route('posts.index')->with('success', 'Post created successfully');
     }
+
+    Post::create([
+        'title' => $request->title,
+        'description' => $request->description,
+        'codes' => $request->codes,
+        'images' => $imagePaths,
+    ]);
+
+    return redirect()->route('posts.index')->with('success', 'Post created');
+}
+
 
     public function show(Post $post)
     {
@@ -61,44 +61,35 @@ public function update(Request $request, Post $post)
     $request->validate([
         'title' => 'required|string|max:255',
         'description' => 'nullable|string',
-        'code' => 'nullable|string',
+        'codes.*' => 'nullable|string',
         'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
     ]);
 
-    // Get current images from DB
     $imagePaths = $post->images ?? [];
 
-    // Handle removed images
-    $removeImages = $request->input('remove_images', []);
-    if (!empty($removeImages)) {
-        foreach ($removeImages as $removePath) {
-            // Delete file from storage
-            if (\Storage::disk('public')->exists($removePath)) {
-                \Storage::disk('public')->delete($removePath);
-            }
-            // Remove path from array
-            $imagePaths = array_filter($imagePaths, fn($img) => $img !== $removePath);
+    foreach ($request->input('remove_images', []) as $removePath) {
+        if (\Storage::disk('public')->exists($removePath)) {
+            \Storage::disk('public')->delete($removePath);
         }
+        $imagePaths = array_filter($imagePaths, fn($img) => $img !== $removePath);
     }
 
-    // Handle newly uploaded images
     if ($request->hasFile('images')) {
         foreach ($request->file('images') as $image) {
-            $path = $image->store('uploads', 'public');
-            $imagePaths[] = $path;
+            $imagePaths[] = $image->store('uploads', 'public');
         }
     }
 
-    // Update post
     $post->update([
         'title' => $request->title,
         'description' => $request->description,
-        'code' => $request->code,
-        'images' => array_values($imagePaths), // clean index
+        'codes' => $request->codes,
+        'images' => array_values($imagePaths),
     ]);
 
-    return redirect()->route('posts.index')->with('success', 'Post updated successfully');
+    return redirect()->route('posts.index')->with('success', 'Post updated');
 }
+
 
 
 

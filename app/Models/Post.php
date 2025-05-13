@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model
 {
-protected $fillable = ['title', 'description', 'code', 'images'];
+protected $fillable = ['title', 'description', 'codes', 'images'];
 
 protected $casts = [
-    'images' => 'array', // JSON হিসেবে handle করবে
+    'images' => 'array',
+    'codes' => 'array',
 ];
+
 
 }
